@@ -1,0 +1,144 @@
+"use client";
+
+import {
+  completeTask,
+  deleteTask,
+  fetchTasks,
+  getUserCategories,
+  setCategoryFilter,
+} from "@/lib/redux/slices/taskSlice";
+import { AppDispatch, RootState } from "@/lib/redux/store";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { format } from "date-fns";
+import { Badge } from "./ui/badge";
+import { BookCheck, CircleCheckBig } from "lucide-react";
+import Link from "next/link";
+import toast from "react-hot-toast";
+
+const TaskDashboard = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { tasks, categories, selectedCategory, status, error } = useSelector(
+    (state: RootState) => state.task
+  );
+
+  useEffect(() => {
+    dispatch(fetchTasks());
+    dispatch(getUserCategories());
+  }, [dispatch]);
+
+  const handleCategoryChange = (category: string) => {
+    dispatch(setCategoryFilter(category));
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    dispatch(deleteTask(taskId)).then((res) => {
+      if (res.type === "tasks/deleteTask/fulfilled") {
+        toast.success("Task deleted successfully");
+      } else {
+        toast.error("Failed to delete task");
+      }
+    });
+  };
+
+  const filteredTasks = tasks.filter(
+    (task) => selectedCategory === "All" || task.category === selectedCategory
+  );
+
+  const handleCompleteTask = (taskId: string) => {
+    dispatch(completeTask(taskId)).then((res) => {
+      if (res.type === "tasks/completeTask/fulfilled") {
+        dispatch(fetchTasks());
+        toast.success("Task completed successfully");
+      } else {
+        toast.error("Failed to complete task");
+      }
+    });
+  };
+
+  return (
+    <section className="container">
+      <div className="mt-8 flex max-[350px]:flex-col justify-between items-center">
+        <h1 className="text-2xl font-bold mb-4">Task Dashboard</h1>
+        <Button asChild variant="default">
+          <Link href="/tasks/new">Add Task</Link>
+        </Button>
+      </div>
+      <div className="max-w-3xl mx-auto mt-8">
+        <div className="mb-4 flex justify-between items-center">
+          <div>
+            {categories && categories.length > 0 && (
+              <Button
+                onClick={() => handleCategoryChange("All")}
+                variant="outline"
+                className={selectedCategory === "All" ? "bg-slate-200" : ""}
+              >
+                All
+              </Button>
+            )}
+
+            {categories?.map((category) => (
+              <Button
+                key={category}
+                onClick={() => handleCategoryChange(category)}
+                variant="outline"
+                className={`${
+                  selectedCategory === category ? "bg-slate-200" : ""
+                } ms-1 mb-1`}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {status === "loading" && <p>Loading tasks...</p>}
+        {error && <p>Error loading tasks: {error}</p>}
+
+        <div className="grid grid-cols-1 gap-4">
+          {filteredTasks.map((task) => (
+            <Card key={task._id} className="p-4">
+              <h3 className="text-lg font-bold">{task.title}</h3>
+              <p>{task.description}</p>
+              <p className="text-sm text-gray-500">
+                Due: {format(new Date(task.dueDate), "PPP")}
+              </p>
+              <div className="flex items-center my-2 space-x-2">
+                <BookCheck className="w-6 h-6" />
+                <span>{task.category}</span>
+              </div>
+              <div className="mt-4 flex justify-between">
+                <div className="flex items-center space-x-2">
+                  <Button asChild variant="outline">
+                    <Link href={`/tasks/${task._id}/edit`}>Edit</Link>
+                  </Button>
+                  {!task.completed ? (
+                    <span
+                      title="Mark as completed"
+                      className="cursor-pointer"
+                      onClick={() => handleCompleteTask(task._id)}
+                    >
+                      <CircleCheckBig className="w-6 h-6" />
+                    </span>
+                  ) : (
+                    <Badge variant="default">Completed</Badge>
+                  )}
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleDeleteTask(task._id)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default TaskDashboard;
