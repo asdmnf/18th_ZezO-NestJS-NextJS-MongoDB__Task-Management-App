@@ -7,7 +7,6 @@ export class LinkedinController {
 
   @Get('scrape')
   async scrapeProfile(@Query('url') url: string) {
-    console.log(url, 'url');
     if (!url) {
       return { error: 'LinkedIn URL is required' };
     }
