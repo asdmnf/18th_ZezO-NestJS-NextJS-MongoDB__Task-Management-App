@@ -48,6 +48,7 @@ const LoginForm = () => {
       if (res.type === "auth/login/fulfilled") {
         toast.success("Login successful");
         router.push("/dashboard");
+        router.refresh();
         setLoginInputs({ email: "", password: "" });
       } else if (res.type === "auth/login/rejected") {
         const err = res.payload.message;

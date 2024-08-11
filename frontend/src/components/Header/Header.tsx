@@ -1,28 +1,11 @@
-"use client";
-
 import Link from "next/link";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
 import { Home, NotepadTextDashed, UserRoundSearch } from "lucide-react";
-import { useDispatch } from "react-redux";
-import { logout } from "@/lib/redux/slices/authSlice";
-import { AppDispatch } from "@/lib/redux/store";
-import { useRouter } from "next/navigation";
+import { cookies } from "next/headers";
+import LogoutButton from "./_components/LogoutButton";
 
 const Header = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
-
-  // FIXME: try to set ssr to false
-  // i always set token to cookies from server (no need to deal with token from frontend at all) as http only and another not http only cookie 'isLogged' to check if user is logged in and this method work correctly with react but not with nextjs
-  // i got error related to server and client mismatch so i need to set ssr to false as a solution
-  // i did this dumb way because i didn't want to deal with server again, but still dumb solution
-  const [isLogged, setIsLogged] = useState(false);
-  useEffect(() => {
-    const token = Cookies.get("token");
-    setIsLogged(!!token);
-  }, []);
-
+  const token = cookies().get("token")?.value;
+  const isLogged = !!token;
   const hideElementOnLogout = !isLogged ? "hidden" : "";
   const hideElementOnLogin = isLogged ? "hidden" : "";
 
@@ -61,18 +44,7 @@ const Header = () => {
             <UserRoundSearch />
           </Link>
 
-          <form action="">
-            <button
-              className={`px-4 py-2 bg-blue-500 rounded hover:bg-blue-600 text-white border-0 cursor-pointer ${hideElementOnLogout}`}
-              onClick={() => {
-                dispatch(logout());
-                // FIXME: navigation not working
-                router.replace("/");
-              }}
-            >
-              Logout
-            </button>
-          </form>
+          <LogoutButton hideElementOnLogout={hideElementOnLogout} />
         </div>
       </nav>
     </header>

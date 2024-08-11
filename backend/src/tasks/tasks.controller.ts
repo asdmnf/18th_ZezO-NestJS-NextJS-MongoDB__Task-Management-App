@@ -40,7 +40,6 @@ export class TasksController {
   @Get(':id')
   @PrivateRoute()
   findOne(@Param('id', ParseMongoIdPipe) id: string): Promise<Task> {
-    console.log(id);
     return this.tasksService.findOne(id);
   }
 

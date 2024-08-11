@@ -10,14 +10,15 @@ import { useRouter } from "next/navigation";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import toast from "react-hot-toast";
+import { format } from "date-fns";
 
 const TaskForm = ({ taskId }: { taskId?: string }) => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const task =
-    useSelector((state: RootState) =>
-      state.task.tasks.find((task) => task._id === taskId)
-    ) || useSelector((state: RootState) => state.task.task);
+  const task = useSelector((state: RootState) => {
+    const taskById = state.task.tasks.find((task) => task._id === taskId);
+    return taskById || state.task.task;
+  });
   const { categories } = useSelector((state: RootState) => state.task);
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
@@ -115,11 +116,12 @@ const TaskForm = ({ taskId }: { taskId?: string }) => {
 
       <div className="mb-4">
         <label className="block text-gray-700">Due Date</label>
+        {task?.dueDate && <span className="font-bold">{format(new Date(task.dueDate), "PPP")}</span>}
         <Input
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          required
+          required={!!!task?.dueDate}
         />
       </div>
 
