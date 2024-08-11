@@ -11,4 +11,7 @@ export class RegisterDto {
   @IsString()
   @Length(6, 20)
   readonly password: string;
+
+  @IsString()
+  readonly linkedin_url: string;
 }

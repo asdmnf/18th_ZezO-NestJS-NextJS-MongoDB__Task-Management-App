@@ -1,10 +1,15 @@
 "use client";
 
 import api from "@/lib/axios/api";
-import { useState } from "react";
+import { getProfile } from "@/lib/redux/slices/authSlice";
+import { AppDispatch, RootState } from "@/lib/redux/store";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 const LinkedinProfile = () => {
-  const [email, setEmail] = useState("egypte.2200@gmail.com");
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const [url, setUrl] = useState('');
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +19,7 @@ const LinkedinProfile = () => {
     setError(null);
     try {
       const response = await api.get("/linkedin/scrape", {
-        params: { email },
+        params: { url },
       });
       setProfile(response.data);
     } catch (err) {
@@ -24,15 +29,23 @@ const LinkedinProfile = () => {
     }
   };
 
+  useEffect(() => {
+    dispatch(getProfile()).then((res) => {
+      if (res.type === "auth/getProfile/fulfilled") {
+        setUrl(res.payload.linkedin_url);
+      }
+    })
+  }, [])
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">LinkedIn Profile Scraper</h1>
 
       <input
-        type="email"
-        placeholder="Enter Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        type="text"
+        placeholder="Enter Linkedin URL"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
         className="w-full p-2 mb-4 border rounded"
       />
       <button

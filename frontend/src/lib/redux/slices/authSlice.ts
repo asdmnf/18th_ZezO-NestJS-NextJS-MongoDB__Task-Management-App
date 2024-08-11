@@ -31,6 +31,18 @@ export const login = createAsyncThunk(
   }
 );
 
+export const getProfile = createAsyncThunk(
+  "auth/getProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/users/profile");
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 export const register = createAsyncThunk(
   "auth/register",
   async (
@@ -79,6 +91,18 @@ const authSlice = createSlice({
         state.status = "idle";
       })
       .addCase(register.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+
+      .addCase(getProfile.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(getProfile.fulfilled, (state, action) => {
+        state.status = "idle";
+        state.user = action.payload;
+      })
+      .addCase(getProfile.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       });

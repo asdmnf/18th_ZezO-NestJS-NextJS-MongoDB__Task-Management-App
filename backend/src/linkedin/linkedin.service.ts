@@ -19,27 +19,23 @@ export class LinkedinService {
       .build();
   }
 
-  async scrapeProfileByEmail(email: string): Promise<any> {
+  async scrapeProfile(linkedinUrl: string): Promise<any> {
     try {
-      // Go to Google search and search for LinkedIn profiles by email
-      await this.driver.get(`https://www.google.com/search?q=site:linkedin.com "${email}"`);
+      await this.driver.get(linkedinUrl);
 
-      // Click on the first LinkedIn result (assumes it's the correct profile)
-      const linkedinProfileLink = await this.driver
-        .findElement(webdriver.By.css('a[href*="linkedin.com"]'))
-        .getAttribute('href');
-      await this.driver.get(linkedinProfileLink);
-
-      // Scrape profile data
-      const name = await this.driver.findElement(webdriver.By.css('.text-heading-xlarge')).getText();
+      const name = await this.driver
+        .findElement(webdriver.By.css('.top-card-layout__title'))
+        .getText();
       const profilePicture = await this.driver
-        .findElement(webdriver.By.css('.profile-photo img'))
+        .findElement(
+          webdriver.By.css('.top-card-layout__entity-image-container img'),
+        )
         .getAttribute('src');
 
       return {
         name,
         profilePicture,
-        linkedinUrl: linkedinProfileLink,
+        linkedinUrl,
       };
     } catch (error) {
       console.error('Error scraping LinkedIn profile:', error);

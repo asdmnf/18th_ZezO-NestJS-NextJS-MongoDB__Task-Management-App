@@ -6,11 +6,12 @@ export class LinkedinController {
   constructor(private readonly LinkedinService: LinkedinService) {}
 
   @Get('scrape')
-  async scrapeProfileByEmail(@Query('email') email: string) {
-    if (!email) {
-      return { error: 'Email is required' };
+  async scrapeProfile(@Query('url') url: string) {
+    console.log(url, 'url');
+    if (!url) {
+      return { error: 'LinkedIn URL is required' };
     }
-    const profileData = await this.LinkedinService.scrapeProfileByEmail(email);
+    const profileData = await this.LinkedinService.scrapeProfile(url);
     return profileData;
   }
 }

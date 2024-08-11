@@ -19,11 +19,13 @@ const RegisterForm = () => {
     name: "",
     email: "",
     password: "",
+    linkedin_url: "",
   });
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     password: "",
+    linkedin_url: "",
     generalError: "",
   });
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -39,6 +41,7 @@ const RegisterForm = () => {
       name: "",
       email: "",
       password: "",
+      linkedin_url: "",
       generalError: "",
     });
 
@@ -52,6 +55,13 @@ const RegisterForm = () => {
     }
     if (registerInputs.password === "") {
       setErrors((prev) => ({ ...prev, password: "Password is required" }));
+      return;
+    }
+    if (registerInputs.linkedin_url === "") {
+      setErrors((prev) => ({
+        ...prev,
+        linkedin_url: "Linkedin URL is required",
+      }));
       return;
     }
     if (passwordConfirm === "") {
@@ -78,6 +88,7 @@ const RegisterForm = () => {
           name: "",
           email: "",
           password: "",
+          linkedin_url: "",
         });
       } else if (res.type === "auth/register/rejected") {
         const err = res.payload.message;
@@ -91,6 +102,8 @@ const RegisterForm = () => {
               setErrors((prev) => ({ ...prev, email: item }));
             } else if (item.includes("password")) {
               setErrors((prev) => ({ ...prev, password: item }));
+            } else if (item.includes("linkedin_url")) {
+              setErrors((prev) => ({ ...prev, linkedin_url: item }));
             }
           });
         }
@@ -192,6 +205,31 @@ const RegisterForm = () => {
             onChange={(e) => setPasswordConfirm(e.target.value)}
             value={passwordConfirm}
           />
+        </div>
+        <div className="w-full">
+          <label
+            className="block text-gray-700 text-sm font-bold mb-2"
+            htmlFor="passwordConfirmation"
+          >
+            Linkedin URL
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="linkedin_url"
+            name="linkedin_url"
+            type="text"
+            placeholder="Linkedin URL"
+            onChange={setRegisterInputsHandler}
+            value={registerInputs.linkedin_url}
+          />
+          {errors.linkedin_url && (
+            <AlertCard
+              title="Error"
+              message={errors.linkedin_url}
+              variant="destructive"
+              className="mt-3"
+            />
+          )}
         </div>
       </div>
 
