@@ -131,8 +131,8 @@ const TaskDashboard = () => {
                       <BookCheck className="w-6 h-6" />
                       <span>{task.category}</span>
                     </div>
-                    <div className="mt-4 flex justify-between">
-                      <div className="flex items-center space-x-2">
+                    <div className="mt-4 flex justify-between max-[400px]:flex-col max-[400px]:space-y-2">
+                      <div className="flex items-center space-x-2 max-[400px]:justify-between">
                         <Button asChild variant="outline">
                           <Link href={`/tasks/${task._id}/edit`}>Edit</Link>
                         </Button>
