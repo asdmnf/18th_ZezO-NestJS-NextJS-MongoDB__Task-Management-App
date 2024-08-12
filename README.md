@@ -14,8 +14,9 @@
    npm run dev
 ## Tech Stack
 
+### Backend
+
 ```json
-Backend
 "dependencies": {
     "@nestjs/common": "^10.3.10",
     "@nestjs/config": "^3.2.3",
@@ -59,7 +60,8 @@ Backend
     "typescript": "^5.1.3"
 }
 
-Frontend
+###Frontend
+
 ```json
 "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",
@@ -77,7 +79,8 @@ Frontend
     "react-hot-toast": "^2.4.1",
     "react-redux": "^9.1.2",
     "tailwind-merge": "^2.4.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",
