@@ -9,6 +9,7 @@ import { AlertCard } from "@/components/AlertCard";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/lib/redux/store";
 import { register } from "@/lib/redux/slices/authSlice";
+import registerValidationSchema from "../_validation/registerValidationSchema";
 
 const RegisterForm = () => {
   const router = useRouter();
@@ -19,16 +20,17 @@ const RegisterForm = () => {
     name: "",
     email: "",
     password: "",
+    password_confirm: "",
     linkedin_url: "",
   });
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     password: "",
+    password_confirm: "",
     linkedin_url: "",
     generalError: "",
   });
-  const [passwordConfirm, setPasswordConfirm] = useState("");
 
   const setRegisterInputsHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRegisterInputs((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -41,38 +43,24 @@ const RegisterForm = () => {
       name: "",
       email: "",
       password: "",
+      password_confirm: "",
       linkedin_url: "",
       generalError: "",
     });
 
-    if (registerInputs.name === "") {
-      setErrors((prev) => ({ ...prev, name: "Name is required" }));
+    const validationResult = registerValidationSchema.safeParse(registerInputs);
+    if (!validationResult.success) {
+      validationResult.error.issues.forEach((issue) => {
+        setErrors((prev) => ({ ...prev, [issue.path[0]]: issue.message }));
+      });
       return;
     }
-    if (registerInputs.email === "") {
-      setErrors((prev) => ({ ...prev, email: "Email is required" }));
-      return;
-    }
-    if (registerInputs.password === "") {
-      setErrors((prev) => ({ ...prev, password: "Password is required" }));
-      return;
-    }
-    if (registerInputs.linkedin_url === "") {
-      setErrors((prev) => ({
-        ...prev,
-        linkedin_url: "Linkedin URL is required",
-      }));
-      return;
-    }
-    if (passwordConfirm === "") {
-      setErrors((prev) => ({
-        ...prev,
-        generalError: "Please confirm password",
-      }));
-      return;
-    }
+    const registerDto = {
+      ...validationResult.data,
+      password_confirm: undefined,
+    };
 
-    if (registerInputs.password !== passwordConfirm) {
+    if (registerInputs.password !== registerInputs.password_confirm) {
       setErrors((prev) => ({
         ...prev,
         generalError: "Passwords do not match",
@@ -80,7 +68,7 @@ const RegisterForm = () => {
       return;
     }
 
-    dispatch(register(registerInputs)).then((res) => {
+    dispatch(register(registerDto)).then((res) => {
       if (res.type === "auth/register/fulfilled") {
         toast.success("Registration successful");
         router.push("/auth/login");
@@ -88,6 +76,7 @@ const RegisterForm = () => {
           name: "",
           email: "",
           password: "",
+          password_confirm: "",
           linkedin_url: "",
         });
       } else if (res.type === "auth/register/rejected") {
@@ -102,6 +91,8 @@ const RegisterForm = () => {
               setErrors((prev) => ({ ...prev, email: item }));
             } else if (item.includes("password")) {
               setErrors((prev) => ({ ...prev, password: item }));
+            } else if (item.includes("password_confirm")) {
+              setErrors((prev) => ({ ...prev, password_confirm: item }));
             } else if (item.includes("linkedin_url")) {
               setErrors((prev) => ({ ...prev, linkedin_url: item }));
             }
@@ -192,24 +183,32 @@ const RegisterForm = () => {
         <div className="w-full">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="passwordConfirmation"
+            htmlFor="password_confirm"
           >
             Password Confirmation
           </label>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="passwordConfirmation"
-            name="passwordConfirmation"
+            id="password_confirm"
+            name="password_confirm"
             type="password"
             placeholder="Password Confirmation"
-            onChange={(e) => setPasswordConfirm(e.target.value)}
-            value={passwordConfirm}
+            onChange={setRegisterInputsHandler}
+            value={registerInputs.password_confirm}
           />
+          {errors.password_confirm && (
+            <AlertCard
+              title="Error"
+              message={errors.password_confirm}
+              variant="destructive"
+              className="mt-3"
+            />
+          )}
         </div>
         <div className="w-full">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="passwordConfirmation"
+            htmlFor="linkedin_url"
           >
             Linkedin URL
           </label>

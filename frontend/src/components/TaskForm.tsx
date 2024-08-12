@@ -11,40 +11,72 @@ import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
+import taskValidationSchema from "@/app/tasks/validation/taskValidationSchema";
+import { AlertCard } from "./AlertCard";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 const TaskForm = ({ taskId }: { taskId?: string }) => {
   const router = useRouter();
 
+  // used with min attribute on date-time input to prevent past dates
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 
   const dispatch = useDispatch<AppDispatch>();
+  const { categories } = useSelector((state: RootState) => state.task);
   const task = useSelector((state: RootState) => {
     const taskById = state.task.tasks.find((task) => task._id === taskId);
     return taskById || state.task.task;
   });
 
-  const { categories } = useSelector((state: RootState) => state.task);
-  const [title, setTitle] = useState(task?.title || "");
-  const [description, setDescription] = useState(task?.description || "");
-  const [dueDate, setDueDate] = useState(task?.dueDate || "");
-  const [category, setCategory] = useState(task?.category || "");
+  const [taskInputs, setTaskInputs] = useState({
+    title: "",
+    description: "",
+    category: "",
+    dueDate: "",
+    completed: false,
+  });
 
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title);
-      setDescription(task.description);
-      setDueDate(format(new Date(task?.dueDate), "yyyy-MM-dd'T'HH:mm:ss"));
-      setCategory(task.category);
-      // if user refreshes the page, data will be fetched from the server instead of redux global state
-    } else if (taskId && !task) {
-      dispatch(getTask(taskId));
-    }
-  }, [task, taskId]);
+  const [errors, setErrors] = useState({
+    title: "",
+    description: "",
+    category: "",
+    dueDate: "",
+  });
+
+  const setTaskInputsHandler = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setTaskInputs((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const taskDto = { title, description, dueDate, category };
+
+    setErrors({
+      title: "",
+      description: "",
+      category: "",
+      dueDate: "",
+    });
+
+    const validationResult = taskValidationSchema.safeParse(taskInputs);
+    if (!validationResult.success) {
+      validationResult.error.issues.forEach((issue) => {
+        setErrors((prev) => ({ ...prev, [issue.path[0]]: issue.message }));
+      });
+      return;
+    }
+    const taskDto = validationResult.data;
 
     if (taskId) {
       dispatch(updateTask({ id: task?._id as string, task: taskDto })).then(
@@ -68,6 +100,23 @@ const TaskForm = ({ taskId }: { taskId?: string }) => {
 
     router.push("/dashboard");
   };
+  console.log(taskInputs);
+
+  useEffect(() => {
+    if (task) {
+      setTaskInputs({
+        title: task.title,
+        description: task.description,
+        category: task.category,
+        dueDate: format(new Date(task?.dueDate), "yyyy-MM-dd'T'HH:mm:ss"),
+        completed: task.completed,
+      });
+
+      // if user refreshes the page, data will be fetched from the server instead of redux global state
+    } else if (taskId && !task) {
+      dispatch(getTask(taskId));
+    }
+  }, [task, taskId]);
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8">
@@ -78,21 +127,39 @@ const TaskForm = ({ taskId }: { taskId?: string }) => {
       <div className="mb-4">
         <label className="block text-gray-700">Title</label>
         <Input
+          id="title"
+          name="title"
           type="text"
           placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
+          value={taskInputs.title}
+          onChange={setTaskInputsHandler}
         />
+        {errors.title && (
+          <AlertCard
+            title="Error"
+            message={errors.title}
+            variant="destructive"
+            className="mt-3"
+          />
+        )}
       </div>
       <div className="mb-4">
         <label className="block text-gray-700">Description</label>
         <Textarea
+          id="description"
+          name="description"
           placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
+          value={taskInputs.description}
+          onChange={setTaskInputsHandler}
         />
+        {errors.description && (
+          <AlertCard
+            title="Error"
+            message={errors.description}
+            variant="destructive"
+            className="mt-3"
+          />
+        )}
       </div>
 
       <div className="mb-4">
@@ -103,32 +170,72 @@ const TaskForm = ({ taskId }: { taskId?: string }) => {
               <Badge
                 key={item}
                 className="mr-1"
-                onClick={() => setCategory(item)}
-                variant={item === category ? "default" : "outline"}
+                onClick={() => setTaskInputs({ ...taskInputs, category: item })}
+                variant={item === taskInputs.category ? "default" : "outline"}
               >
                 {item}
               </Badge>
             ))}
         </div>
         <Input
+          id="category"
+          name="category"
           type="text"
           placeholder="Category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          required
+          value={taskInputs.category}
+          onChange={setTaskInputsHandler}
         />
+        {errors.category && (
+          <AlertCard
+            title="Error"
+            message={errors.category}
+            variant="destructive"
+            className="mt-3"
+          />
+        )}
       </div>
 
       <div className="mb-4">
         <label className="block text-gray-700">Due Date</label>
         <Input
+          id="dueDate"
+          name="dueDate"
           type="datetime-local"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          required={!!!task?.dueDate}
+          value={taskInputs.dueDate}
+          onChange={setTaskInputsHandler}
           min={now.toJSON().split(":").slice(0, -1).join(":")}
         />
+        {errors.dueDate && (
+          <AlertCard
+            title="Error"
+            message={errors.dueDate}
+            variant="destructive"
+            className="mt-3"
+          />
+        )}
       </div>
+
+      {task && (
+        <div className="mb-4">
+          <label className="block text-gray-700">Status</label>
+          <Select
+            defaultValue={task?.completed ? "completed" : "notCompleted"}
+            onValueChange={(value) =>
+              setTaskInputs({ ...taskInputs, completed: value === "completed" })
+            }
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="notCompleted">Not Completed</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <Button type="submit" className="w-full">
         {taskId ? "Update Task" : "Add Task"}

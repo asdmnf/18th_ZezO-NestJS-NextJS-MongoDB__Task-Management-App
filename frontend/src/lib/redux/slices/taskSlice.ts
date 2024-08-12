@@ -5,7 +5,7 @@ interface Task {
   _id: string;
   title: string;
   description: string;
-  dueDate: string;
+  dueDate: Date;
   category: string;
   completed: boolean;
 }

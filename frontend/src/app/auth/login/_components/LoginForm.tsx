@@ -9,9 +9,11 @@ import { AlertCard } from "@/components/AlertCard";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/lib/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/lib/redux/store";
+import loginValidationSchema from "../_validation/loginValidationSchema";
 
 const LoginForm = () => {
   const router = useRouter();
+
   const dispatch = useDispatch<AppDispatch>();
   const auth = useSelector((state: RootState) => state.auth);
 
@@ -35,16 +37,16 @@ const LoginForm = () => {
       generalError: "",
     });
 
-    if (loginInputs.email === "") {
-      setErrors((prev) => ({ ...prev, email: "Email is required" }));
+    const validation = loginValidationSchema.safeParse(loginInputs);
+    if (!validation.success) {
+      validation.error.issues.forEach((issue) => {
+        setErrors((prev) => ({ ...prev, [issue.path[0]]: issue.message }));
+      });
       return;
     }
-    if (loginInputs.password === "") {
-      setErrors((prev) => ({ ...prev, password: "Password is required" }));
-      return;
-    }
+    const loginDto = validation.data;
 
-    dispatch(login(loginInputs)).then((res) => {
+    dispatch(login(loginDto)).then((res) => {
       if (res.type === "auth/login/fulfilled") {
         toast.success("Login successful");
         router.push("/dashboard");
