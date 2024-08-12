@@ -13,12 +13,17 @@ import toast from "react-hot-toast";
 import { format } from "date-fns";
 
 const TaskForm = ({ taskId }: { taskId?: string }) => {
-  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+
+  const dispatch = useDispatch<AppDispatch>();
   const task = useSelector((state: RootState) => {
     const taskById = state.task.tasks.find((task) => task._id === taskId);
     return taskById || state.task.task;
   });
+
   const { categories } = useSelector((state: RootState) => state.task);
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
@@ -29,9 +34,9 @@ const TaskForm = ({ taskId }: { taskId?: string }) => {
     if (task) {
       setTitle(task.title);
       setDescription(task.description);
-      setDueDate(task.dueDate);
+      setDueDate(format(new Date(task?.dueDate), "yyyy-MM-dd'T'HH:mm:ss"));
       setCategory(task.category);
-      // if user refreshes the page, data will be fetched from the server
+      // if user refreshes the page, data will be fetched from the server instead of redux global state
     } else if (taskId && !task) {
       dispatch(getTask(taskId));
     }
@@ -116,12 +121,12 @@ const TaskForm = ({ taskId }: { taskId?: string }) => {
 
       <div className="mb-4">
         <label className="block text-gray-700">Due Date</label>
-        {task?.dueDate && <span className="font-bold">{format(new Date(task.dueDate), "PPP")}</span>}
         <Input
-          type="date"
+          type="datetime-local"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           required={!!!task?.dueDate}
+          min={now.toJSON().split(":").slice(0, -1).join(":")}
         />
       </div>
 

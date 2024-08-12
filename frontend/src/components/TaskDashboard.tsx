@@ -103,7 +103,7 @@ const TaskDashboard = () => {
               <h3 className="text-lg font-bold">{task.title}</h3>
               <p>{task.description}</p>
               <p className="text-sm text-gray-500">
-                Due: {format(new Date(task.dueDate), "PPP")}
+                Due: {format(new Date(task.dueDate), "PPP p")}
               </p>
               <div className="flex items-center my-2 space-x-2">
                 <BookCheck className="w-6 h-6" />
