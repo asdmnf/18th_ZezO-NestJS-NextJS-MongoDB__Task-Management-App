@@ -18,6 +18,15 @@ import { BookCheck, CircleCheckBig } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
+interface Task {
+  _id: string;
+  title: string;
+  description: string;
+  dueDate: Date;
+  category: string;
+  completed: boolean;
+}
+
 const TaskDashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { tasks, categories, selectedCategory, status, error } = useSelector(
@@ -46,6 +55,15 @@ const TaskDashboard = () => {
   const filteredTasks = tasks.filter(
     (task) => selectedCategory === "All" || task.category === selectedCategory
   );
+
+  const tasksByDay = filteredTasks.reduce((acc: Record<string, any>, task) => {
+    const date = format(new Date(task.dueDate), "yyyy-MM-dd");
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(task);
+    return acc;
+  }, {});
 
   const handleCompleteTask = (taskId: string) => {
     dispatch(completeTask(taskId)).then((res) => {
@@ -98,40 +116,47 @@ const TaskDashboard = () => {
         {error && <p>Error loading tasks: {error}</p>}
 
         <div className="grid grid-cols-1 gap-4">
-          {filteredTasks.map((task) => (
-            <Card key={task._id} className="p-4">
-              <h3 className="text-lg font-bold">{task.title}</h3>
-              <p>{task.description}</p>
-              <p className="text-sm text-gray-500">
-                Due: {format(new Date(task.dueDate), "PPP p")}
-              </p>
-              <div className="flex items-center my-2 space-x-2">
-                <BookCheck className="w-6 h-6" />
-                <span>{task.category}</span>
-              </div>
-              <div className="mt-4 flex justify-between">
-                <div className="flex items-center space-x-2">
-                  <Button asChild variant="outline">
-                    <Link href={`/tasks/${task._id}/edit`}>Edit</Link>
-                  </Button>
-                  {!task.completed ? (
-                    <span
-                      title="Mark as completed"
-                      className="cursor-pointer"
-                      onClick={() => handleCompleteTask(task._id)}
-                    >
-                      <CircleCheckBig className="w-6 h-6" />
-                    </span>
-                  ) : (
-                    <Badge variant="default">Completed</Badge>
-                  )}
-                </div>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDeleteTask(task._id)}
-                >
-                  Delete
-                </Button>
+          {Object.entries(tasksByDay).map(([date, tasks]) => (
+            <Card key={date} className="p-4">
+              <h3 className="text-lg font-bold">{date}</h3>
+              <div className="grid grid-cols-1 gap-4 mt-4">
+                {tasks.map((task: Task) => (
+                  <Card key={task._id} className="p-4">
+                    <h3 className="text-lg font-bold">{task.title}</h3>
+                    <p>{task.description}</p>
+                    <p className="text-sm text-gray-500">
+                      Due: {format(new Date(task.dueDate), "PPP p")}
+                    </p>
+                    <div className="flex items-center my-2 space-x-2">
+                      <BookCheck className="w-6 h-6" />
+                      <span>{task.category}</span>
+                    </div>
+                    <div className="mt-4 flex justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Button asChild variant="outline">
+                          <Link href={`/tasks/${task._id}/edit`}>Edit</Link>
+                        </Button>
+                        {!task.completed ? (
+                          <span
+                            title="Mark as completed"
+                            className="cursor-pointer"
+                            onClick={() => handleCompleteTask(task._id)}
+                          >
+                            <CircleCheckBig className="w-6 h-6" />
+                          </span>
+                        ) : (
+                          <Badge variant="default">Completed</Badge>
+                        )}
+                      </div>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteTask(task._id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
               </div>
             </Card>
           ))}
