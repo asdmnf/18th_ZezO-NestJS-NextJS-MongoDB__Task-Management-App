@@ -100,7 +100,6 @@ const TaskForm = ({ taskId }: { taskId?: string }) => {
 
     router.push("/dashboard");
   };
-  console.log(taskInputs);
 
   useEffect(() => {
     if (task) {
